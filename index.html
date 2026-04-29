@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1D9E75">
+<title>日報管理</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f5;color:#1a1a1a;}
+.wrap{max-width:960px;margin:0 auto;padding:1rem;}
+
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;padding:14px 18px;background:#fff;border-radius:12px;border:1px solid #e5e5e5;flex-wrap:wrap;gap:8px;}
+.topbar-title{font-size:17px;font-weight:600;}
+.topbar-sub{font-size:12px;color:#888;margin-top:2px;}
+.upload-area{border:1.5px dashed #ccc;border-radius:12px;padding:1.2rem;text-align:center;margin-bottom:1rem;cursor:pointer;background:#fff;}
+.upload-area:hover{background:#f0faf6;}
+.upload-label{font-size:14px;color:#888;}
+.upload-label span{color:#1D9E75;font-weight:600;}
+.upload-sub{font-size:11px;color:#aaa;margin-top:5px;}
+.period-bar{display:flex;align-items:center;gap:8px;margin-bottom:1rem;flex-wrap:wrap;background:#fff;padding:10px 14px;border-radius:12px;border:1px solid #e5e5e5;}
+.period-tabs{display:flex;border:1px solid #ddd;border-radius:8px;overflow:hidden;}
+.period-tab{padding:6px 18px;font-size:13px;cursor:pointer;color:#888;background:#fff;border:none;font-family:inherit;border-right:1px solid #ddd;font-weight:500;}
+.period-tab:last-child{border-right:none;}
+.period-tab.active{background:#1D9E75;color:white;}
+.nav-btn{padding:6px 12px;font-size:13px;border:1px solid #ddd;border-radius:8px;background:#fff;color:#666;cursor:pointer;font-family:inherit;}
+.period-label{font-size:15px;font-weight:600;min-width:140px;text-align:center;}
+.btn{font-size:13px;padding:7px 14px;border:1px solid #ddd;border-radius:8px;background:#fff;color:#666;cursor:pointer;font-family:inherit;font-weight:500;}
+.btn.green{color:#1D9E75;border-color:#1D9E75;}
+.btn.red{color:#E24B4A;border-color:#E24B4A;}
+.btn.primary{background:#1D9E75;color:white;border-color:#1D9E75;}
+.stats-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:1.2rem;}
+.stat{background:#fff;border-radius:12px;padding:10px 12px;border:1px solid #e5e5e5;overflow:hidden;min-width:0;}
+.stat-label{font-size:10px;color:#888;margin-bottom:3px;font-weight:500;}
+.stat-value{font-size:22px;font-weight:700;}
+.stat-value.green{color:#0F6E56;}
+.stat-value.red{color:#A32D2D;}
+.section-label{font-size:11px;font-weight:600;color:#888;margin-bottom:8px;}
+.region-legend{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1.2rem;}
+.region-chip{font-size:12px;padding:4px 12px;border-radius:20px;background:#f0faf6;color:#1D9E75;border:1px solid #b8e8d8;font-weight:700;}
+.staff-summary{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-bottom:1.2rem;}
+.staff-card{background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:12px 14px;}
+.staff-name{font-size:14px;font-weight:600;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #f0f0f0;}
+.staff-row{display:flex;justify-content:space-between;font-size:12px;color:#888;margin-top:4px;}
+.staff-row span:last-child{color:#1a1a1a;font-weight:600;}
+.controls{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;align-items:center;background:#fff;padding:10px 14px;border-radius:12px;border:1px solid #e5e5e5;}
+.controls select{font-size:13px;padding:6px 10px;border:1px solid #ddd;border-radius:8px;background:#fff;color:#1a1a1a;font-family:inherit;}
+.staff-tabs{display:flex;gap:6px;flex-wrap:wrap;}
+.staff-tab{font-size:12px;padding:5px 14px;border:1px solid #ddd;border-radius:20px;cursor:pointer;color:#666;background:#fff;font-family:inherit;font-weight:500;}
+.staff-tab.active{background:#1D9E75;color:white;border-color:#1D9E75;}
+.table-wrap{overflow-x:auto;border:1px solid #e5e5e5;border-radius:12px;background:#fff;}
+table{border-collapse:collapse;font-size:12px;font-weight:500;table-layout:fixed;}
+th{background:#f9f9f9;padding:5px 6px;text-align:left;font-weight:600;color:#888;font-size:12px;border-bottom:1px solid #e5e5e5;}
+td{padding:8px 6px;border-bottom:1px solid #f0f0f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:middle;font-size:12px;font-weight:500;text-align:left;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#fafafa;}
+.badge{display:inline-block;font-size:10px;padding:2px 6px;border-radius:20px;font-weight:500;}
+.badge-paid{background:#E1F5EE;color:#0F6E56;}
+.badge-unpaid{background:#FCEBEB;color:#A32D2D;}
+.badge-collect{background:#E8F4FD;color:#1D4ED8;}
+.badge-today{background:#FFF8E1;color:#92610A;}
+.region-badge{display:inline-block;font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px;background:#f0faf6;color:#1D9E75;border:1px solid #b8e8d8;}
+.work-badge{display:inline-block;font-size:10px;padding:1px 5px;border-radius:20px;background:#EEF2FF;color:#3730A3;font-weight:500;}
+.group-header{background:#f5f5f5;font-size:11px;font-weight:600;color:#888;padding:7px 14px;border-bottom:1px solid #e5e5e5;}
+.empty-state{padding:3rem;text-align:center;color:#aaa;font-size:14px;}
+.row-count{margin-top:8px;font-size:11px;color:#aaa;text-align:right;}
+.edit-btn{font-size:10px;padding:2px 8px;border:1px solid #ddd;border-radius:6px;background:#fff;cursor:pointer;color:#1D9E75;font-family:inherit;margin-left:4px;}
+table input[type="text"], table input[type="date"], table select, table textarea{border:none;background:transparent;font-family:inherit;color:#1a1a1a;width:100%;padding:3px 4px;font-size:12px;outline:none;resize:none;word-break:break-all;white-space:normal;}
+table input[type="text"]:hover, table input[type="text"]:focus,
+table input[type="date"]:hover, table input[type="date"]:focus,
+table select:hover, table select:focus,
+table textarea:hover, table textarea:focus{background:#f5f5f5;border-radius:4px;}
+table input[type="text"]{display:block;min-height:1.4em;height:auto;}
+tr{vertical-align:top;}
+table textarea{min-height:40px;line-height:1.5;overflow:hidden;}
+table tr{height:auto;}
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:100;align-items:center;justify-content:center;}
+.modal-box{background:#fff;border-radius:16px;padding:24px;width:320px;max-width:90%;}
+.modal-title{font-size:16px;font-weight:600;margin-bottom:16px;}
+.modal-sub{font-size:13px;color:#888;margin-bottom:8px;}
+.modal-select{width:100%;padding:10px;font-size:14px;border:1px solid #ddd;border-radius:8px;margin-bottom:16px;font-family:inherit;}
+.modal-btns{display:flex;gap:8px;}
+.modal-btn{flex:1;padding:10px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:500;}
+.left-col{display:block;margin-bottom:1rem;}
+.right-col{display:block;}
+
+@media(max-width:1199px){
+  table{table-layout:auto;width:max-content;min-width:100%;}
+  td,th{white-space:nowrap !important;overflow:visible !important;text-overflow:clip !important;}
+}
+
+
+@media(min-width:1200px){
+  #main-content{display:flex !important;gap:16px;align-items:flex-start;}
+  .left-col{display:block;width:300px;flex-shrink:0;}
+  .right-col{display:block;flex:1;min-width:0;}
+  .left-col .stats-grid{grid-template-columns:1fr 1fr;margin-bottom:12px;}
+  table{font-size:16px;font-weight:500;table-layout:fixed !important;width:100% !important;}
+  td,th{white-space:nowrap !important;overflow:hidden !important;text-overflow:ellipsis !important;}
+  td{padding:14px 8px;}
+  th{padding:8px 10px;font-size:12px;}
+  td{padding:8px 10px;}
+  .badge{font-size:11px;padding:3px 10px;}
+  .work-badge{font-size:11px;padding:2px 8px;}
+  .region-badge{font-size:12px;padding:2px 10px;}
+  .wrap{max-width:100%;padding:1rem 2rem;}
+  .topbar-title{font-size:20px;font-weight:700;}
+  .stat-label{font-size:13px;margin-bottom:6px;}
+  .stat-value{}
+  .stat{padding:10px 12px;overflow:hidden;min-width:0;}
+  .staff-summary{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;}
+  .staff-card{padding:16px 20px;}
+  .staff-name{font-size:16px;margin-bottom:10px;padding-bottom:8px;}
+  .staff-row{font-size:13px;margin-top:6px;}
+  table th:nth-child(1){width:6%;}
+  table th:nth-child(2){width:8%;}
+  table th:nth-child(3){width:10%;}
+  table th:nth-child(4){width:8%;}
+  table th:nth-child(5){width:4%;}
+  table th:nth-child(6){width:5%;}
+  table th:nth-child(7){width:5%;}
+  table th:nth-child(8){width:10%;}
+  table th:nth-child(9){width:6%;}
+  table th:nth-child(10){width:6%;}
+  table th:nth-child(11){width:32%;}
+}
+@media(min-width:1600px){.wrap{padding:1rem 3rem;}}
+@media(min-width:1800px){.wrap{padding:1rem 5rem;}}
+
+.resizable { position:relative; user-select:none; white-space:nowrap; cursor:pointer; }
+.col-selected { background:#E8F4FD !important; }
+.col-align-bar { display:none; position:fixed; background:#fff; border:1px solid #ddd; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.15); padding:4px; z-index:999; gap:4px; }
+.col-align-bar button { border:none; background:#f5f5f5; border-radius:6px; padding:4px 10px; cursor:pointer; font-size:13px; }
+.col-align-bar button:hover { background:#1D9E75; color:white; }
+.resizable .resize-handle {
+  position:absolute; right:0; top:0; width:5px; height:100%;
+  cursor:col-resize; background:transparent;
+}
+.resizable .resize-handle:hover { background:rgba(0,0,0,0.15); }
+</style>
+<style id="table-font-style"></style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">📋 日報管理</div>
+      <div class="topbar-sub" id="loaded-info">現場アプリからのデータを待っています</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn" onclick="loadSample()">サンプルデータ</button>
+      <button class="btn" onclick="showMonthExport()">月別出力 ↓</button>
+      <button class="btn" onclick="showYearExport()">年別出力 ↓</button>
+      <button class="btn" onclick="saveSettings()" style="color:#1D9E75;border-color:#1D9E75;">⚙ 設定を保存</button>
+      <button class="btn green" id="restore-btn" onclick="restoreRecords()" style="display:none;">復旧する</button>
+      <button class="btn red" onclick="resetAll()">リセット</button>
+      <button class="btn primary" onclick="exportCSV()">CSV出力 ↓</button>
+    </div>
+  </div>
+
+  <div class="upload-area" id="drop-zone" onclick="document.getElementById('file-input').click()">
+    <input type="file" id="file-input" accept=".csv" multiple style="display:none" onchange="handleFiles(this.files)">
+    <div class="upload-label">📡 現場アプリからリアルタイム受信中 ／ CSVを手動で読み込む場合は <span>クリック</span></div>
+    <div class="upload-sub">複数ファイル同時読み込み可</div>
+  </div>
+
+  <div id="main-content" style="display:none;">
+  <!-- 拡大時：左カラム -->
+  <div class="left-col">
+    <div class="stats-grid">
+      <div class="stat"><div class="stat-label">訪問件数</div><div class="stat-value" id="s-total">0</div></div>
+      <div class="stat"><div class="stat-label">売上合計</div><div class="stat-value green" id="s-amount">¥0</div></div>
+      <div class="stat"><div class="stat-label">当日集金合計</div><div class="stat-value green" id="s-paid">¥0</div></div>
+      <div class="stat"><div class="stat-label">未収合計</div><div class="stat-value red" id="s-unpaid">¥0</div></div>
+    </div>
+    <div class="region-section"><div class="section-label">地域コード</div>
+    <div class="region-legend" id="region-legend"></div></div>
+    <div class="staff-section"><div class="section-label">スタッフ別サマリー</div>
+    <div class="staff-summary" id="staff-summary"></div></div>
+  </div>
+  <!-- 拡大時：右カラム -->
+  <div class="right-col">
+    <div class="period-bar">
+      <div class="period-tabs">
+        <button class="period-tab active" onclick="setPeriodMode('day')">日</button>
+        <button class="period-tab" onclick="setPeriodMode('month')">月</button>
+        <button class="period-tab" onclick="setPeriodMode('year')">年</button>
+        <button class="period-tab" onclick="setPeriodMode('all')">全期間</button>
+        <button class="period-tab" style="background:#FCEBEB;color:#A32D2D;" onclick="setPeriodMode('unpaid')">未収</button>
+      </div>
+      <button class="nav-btn" onclick="navigate(-1)">◀</button>
+      <div class="period-label" id="period-label"></div>
+      <button class="nav-btn" onclick="navigate(1)">▶</button>
+      <button class="btn" onclick="goToday()">今日</button>
+    </div>
+
+    <div style="margin-bottom:1rem;">
+      <div style="display:flex;align-items:center;gap:8px;background:#fff;padding:10px 14px;border-radius:12px;border:1px solid #e5e5e5;">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="#aaa" stroke-width="1.5"/><line x1="11" y1="11" x2="14" y2="14" stroke="#aaa" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <input type="text" id="search-input" placeholder="顧客名・客番・担当者・備考などで検索..." oninput="renderTable()" style="flex:1;border:none;outline:none;font-size:14px;font-family:inherit;color:#1a1a1a;background:transparent;" />
+        <button onclick="clearSearch()" style="font-size:12px;color:#aaa;border:none;background:none;cursor:pointer;padding:2px 6px;font-family:inherit;">✕ クリア</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:12px;align-items:center;background:#fff;padding:8px 14px;border-radius:12px;border:1px solid #e5e5e5;margin-bottom:8px;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:11px;color:#888;white-space:nowrap;">文字サイズ</span>
+        <input type="range" id="font-size-slider" min="10" max="20" value="12" oninput="this.dataset.userSet='1';applyTableFont()" style="width:80px;">
+        <span id="font-size-label" style="font-size:11px;color:#555;min-width:24px;">12</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:11px;color:#888;white-space:nowrap;">文字の太さ</span>
+        <input type="range" id="font-weight-slider" min="300" max="800" step="100" value="500" oninput="applyTableFont()" style="width:80px;">
+        <span id="font-weight-label" style="font-size:11px;color:#555;min-width:30px;">500</span>
+      </div>
+    </div>
+    <div class="controls">
+      <select id="date-format" onchange="renderTable()" style="font-size:12px;padding:5px 10px;border:1px solid #ddd;border-radius:8px;background:#fff;font-family:inherit;">
+        <option value="seireki">西暦</option>
+        <option value="gengou">年号</option>
+      </select>
+      <select id="sort-order" onchange="renderTable()" style="font-size:12px;padding:5px 10px;border:1px solid #ddd;border-radius:8px;background:#fff;font-family:inherit;">
+        <option value="desc">新しい順</option>
+        <option value="asc">古い順</option>
+      </select>
+      <div class="staff-tabs" id="staff-tabs"></div>
+      <select id="filter-payment" onchange="renderTable()">
+        <option value="">集金の有無</option>
+        <option value="当日集金">当日集金</option>
+        <option value="〒">〒</option>
+        <option value="BK">BK</option>
+        <option value="集金済み">集金済み</option>
+        <option value="未収">未収のみ</option>
+      </select>
+      <select id="filter-work" onchange="renderTable()">
+        <option value="">全作業</option>
+        <option value="点検">点検</option>
+        <option value="清掃">清掃</option>
+        <option value="その他">その他</option>
+      </select>
+      <select id="filter-region" onchange="renderTable()">
+        <option value="">全地域</option>
+      </select>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr id="col-header-row">
+            <th class="resizable" style="width:100px;min-width:60px;">日付</th>
+            <th class="resizable" style="width:60px;min-width:40px;">担当者</th>
+            <th class="resizable" style="width:120px;min-width:60px;">顧客名</th>
+            <th class="resizable" style="width:100px;min-width:60px;">請求先</th>
+            <th class="resizable" style="width:45px;min-width:30px;">地域</th>
+            <th class="resizable" style="width:55px;min-width:30px;">客番</th>
+            <th class="resizable" style="width:45px;min-width:30px;">次月</th>
+            <th class="resizable" style="width:65px;min-width:40px;">作業</th>
+            <th class="resizable" style="width:100px;min-width:60px;">集金の有無</th>
+            <th class="resizable" style="width:75px;min-width:40px;">金額</th>
+            <th class="resizable" style="width:55px;min-width:30px;">入金日</th>
+            <th class="resizable" style="width:180px;min-width:80px;">備考</th>
+            <th class="resizable" style="width:38px;min-width:30px;">不在</th>
+            <th class="resizable" style="width:115px;min-width:60px;">提出書類</th>
+            <th class="resizable" style="width:85px;min-width:50px;">提出書類No</th>
+            <th class="resizable" style="width:55px;min-width:30px;">投函日</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+    <div class="row-count" id="row-count"></div>
+  </div><!-- /right-col -->
+  </div><!-- /main-content -->
+</div>
+
+<!-- 月別出力モーダル -->
+<div class="modal" id="month-modal2">
+  <div class="modal-box">
+    <div class="modal-title">月別CSV出力</div>
+    <div class="modal-sub">出力する年月を選択</div>
+    <select id="month-select2" class="modal-select"></select>
+    <div class="modal-btns">
+      <button class="modal-btn" style="border:1px solid #ddd;background:#fff;" onclick="document.getElementById('month-modal2').style.display='none'">キャンセル</button>
+      <button class="modal-btn" style="border:none;background:#1D9E75;color:white;" onclick="exportMonthCSV()">出力する</button>
+    </div>
+  </div>
+</div>
+
+<!-- 列揃えバー -->
+<div class="col-align-bar" id="col-align-bar">
+  <button onclick="setColAlign('left')" title="左揃え">⬅ 左</button>
+  <button onclick="setColAlign('center')" title="中央揃え">⬛ 中央</button>
+  <button onclick="setColAlign('right')" title="右揃え">➡ 右</button>
+  <button onclick="closeAlignBar()" style="color:#aaa;">✕</button>
+</div>
+
+<!-- 年別出力モーダル -->
+<div class="modal" id="month-modal">
+  <div class="modal-box">
+    <div class="modal-title">年別CSV出力</div>
+    <div class="modal-sub">出力する年を選択</div>
+    <select id="month-select" class="modal-select"></select>
+    <div class="modal-btns">
+      <button class="modal-btn" style="border:1px solid #ddd;background:#fff;" onclick="document.getElementById('month-modal').style.display='none'">キャンセル</button>
+      <button class="modal-btn" style="border:none;background:#1D9E75;color:white;" onclick="exportYearCSV()">出力する</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const REGION_LABELS = ['A','B','C','D','E','F','G','H','I','J','K','L'];
+let regionMap = {};
+let allRecords = [];
+let clearedRecords = [];
+let clearedRegionMap = {};
+let periodMode = 'day';
+let cursor = new Date();
+let activeStaff = 'all';
+
+// ドラッグ&ドロップ
+const dropZone = document.getElementById('drop-zone');
+dropZone.addEventListener('dragover', e=>{e.preventDefault(); dropZone.style.background='#f0faf6';});
+dropZone.addEventListener('dragleave', ()=>{dropZone.style.background='#fff';});
+dropZone.addEventListener('drop', e=>{e.preventDefault(); dropZone.style.background='#fff'; handleFiles(e.dataTransfer.files);});
+
+function handleFiles(files) {
+  const fileArray = Array.from(files);
+  let index = 0;
+  let pending = fileArray.length;
+  function processNext() {
+    if(index >= fileArray.length) return;
+    const file = fileArray[index]; index++;
+    const suggested = file.name.replace(/\.csv$/i,'').replace(/_日報.*$/,'').replace(/日報_.*$/,'') || '';
+    const staffName = prompt('「' + file.name + '」\n担当者名を入力してください：', suggested);
+    if(staffName === null) { pending--; if(pending===0) refresh(); processNext(); return; }
+    const name = staffName.trim() || '不明';
+    const reader = new FileReader();
+    reader.onload = e => { parseCSV(e.target.result, name); pending--; if(pending===0) refresh(); processNext(); };
+    reader.readAsText(file, 'UTF-8');
+  }
+  processNext();
+}
+
+function parseCSV(text, staffName) {
+  const lines = text.replace(/^\uFEFF/,'').split('\n').filter(l=>l.trim());
+  if(lines.length < 2) return;
+  lines.slice(1).forEach(line => {
+    const cols = line.split(',');
+    if(cols.length < 5) return;
+    const dateRaw = cols[0]||'';
+    const parsed = parseJpDate(dateRaw);
+    const regionRaw = cols[3]||'';
+    const regionCode = assignRegion(regionRaw);
+    allRecords.push({
+      staff: staffName, dateRaw, dateObj: parsed,
+      no: cols[1]||'', time: cols[2]||'',
+      regionRaw, regionCode,
+      customer: cols[4]||'',
+      workType: cols[5]||'',
+      payment: cols[6]||'',
+      amount: parseInt(cols[7])||0,
+      note: cols[8]||''
+    });
+  });
+}
+
+function assignRegion(name) {
+  if(!name) return '?';
+  if(regionMap[name]) return regionMap[name];
+  const used = Object.values(regionMap);
+  const next = REGION_LABELS.find(l=>!used.includes(l));
+  if(next){ regionMap[name]=next; return next; }
+  return '?';
+}
+
+function parseJpDate(s) {
+  const m = s.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+  if(m) return new Date(parseInt(m[1]), parseInt(m[2])-1, parseInt(m[3]));
+  const m2 = s.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+  if(m2) return new Date(parseInt(m2[1]), parseInt(m2[2])-1, parseInt(m2[3]));
+  return null;
+}
+
+function loadSample() {
+  allRecords=[]; regionMap={};
+  const staffList=['田中','佐藤','鈴木','山本','伊藤'];
+  const regionNames=['千葉市','市原市','茂原市','勝浦市','いすみ市','大網白里市','山武市','東金市','九十九里町','一宮町','長柄町','長南町'];
+  regionNames.forEach(r=>assignRegion(r));
+  const customers=['山田商店','(株)〇〇工務店','佐々木食品','田村電気','(有)木村商会','中田建設','青木商事','松本電機'];
+  const workTypes=['点検','清掃','その他'];
+  const now=new Date();
+  for(let dOffset=-730; dOffset<=0; dOffset+=Math.floor(Math.random()*5)+2){
+    const day=new Date(now.getFullYear(), now.getMonth(), now.getDate()+dOffset);
+    if(day.getDay()===0||day.getDay()===6) continue;
+    staffList.forEach(s=>{
+      const n=Math.floor(Math.random()*4)+1;
+      for(let i=0;i<n;i++){
+        const amt=(Math.floor(Math.random()*20)+1)*1000;
+        const rand=Math.random();const payType=rand<0.5?'当日集金':rand<0.8?'集金済み':'未収';
+        const dateStr=day.getFullYear()+'年'+(day.getMonth()+1)+'月'+day.getDate()+'日';
+        const regionRaw=regionNames[Math.floor(Math.random()*regionNames.length)];
+        const wt = payType==='集金のみ'?'その他':workTypes[Math.floor(Math.random()*3)];
+        allRecords.push({
+          staff:s, dateRaw:dateStr, dateObj:new Date(day),
+          no:String(i+1),
+          regionRaw, regionCode:assignRegion(regionRaw),
+          kyakuban: String(Math.floor(Math.random()*9000)+1000),
+          nenkan: [4,6,12][Math.floor(Math.random()*3)],
+          customer:customers[Math.floor(Math.random()*customers.length)],
+          seikyusaki: Math.random()>0.5?'本社経理部':'',
+          workType:wt,
+          workDetail:wt,
+          amount:amt,
+          payment:payType,
+          nyukinDate:(payType==='当日集金'||(wt==='集金のみ'&&payType==='可'))?(()=>{const d=new Date(day);return (d.getMonth()+1)+'/'+d.getDate();})():'',
+          absent:Math.random()>0.9,
+          note:''
+        });
+      }
+    });
+  }
+  cursor=new Date(); refresh();
+}
+
+function resetAll(){
+  if(!confirm('本当にリセットしますか？\n（復旧ボタンで元に戻せます）')) return;
+  clearedRecords = [...allRecords];
+  clearedRegionMap = {...regionMap};
+  allRecords=[]; regionMap={};
+  const mc = document.getElementById('main-content');
+  mc.style.display='none';
+  mc.dataset.hidden='1';
+  document.getElementById('loaded-info').textContent='リセットされました';
+  document.getElementById('restore-btn').style.display='inline-block';
+}
+
+function restoreRecords(){
+  if(clearedRecords.length===0){alert('復旧するデータがありません');return;}
+  allRecords = [...clearedRecords];
+  regionMap = {...clearedRegionMap};
+  clearedRecords=[];
+  document.getElementById('restore-btn').style.display='none';
+  const mc = document.getElementById('main-content');
+  if(mc) delete mc.dataset.hidden;
+  refresh();
+}
+
+function setPeriodMode(mode) {
+  periodMode=mode;
+  document.querySelectorAll('.period-tab').forEach((t,i)=>t.classList.toggle('active',['day','month','year','all','unpaid'][i]===mode));
+  activeStaff='all'; refresh();
+}
+
+function navigate(dir) {
+  if(periodMode==='all'||periodMode==='unpaid') return;
+  if(periodMode==='day') cursor.setDate(cursor.getDate()+dir);
+  else if(periodMode==='month') cursor.setMonth(cursor.getMonth()+dir);
+  else if(periodMode==='year') cursor.setFullYear(cursor.getFullYear()+dir);
+  cursor=new Date(cursor); refresh();
+}
+
+function goToday(){ cursor=new Date(); refresh(); }
+
+function getPeriodLabel() {
+  const y=cursor.getFullYear(), m=cursor.getMonth()+1, d=cursor.getDate();
+  if(periodMode==='day') return y+'年'+m+'月'+d+'日';
+  if(periodMode==='month') return y+'年'+m+'月';
+  if(periodMode==='year') return y+'年';
+  if(periodMode==='unpaid') return '未収一覧';
+  return '全期間';
+}
+
+function filterByPeriod(records) {
+  if(periodMode==='all') return records;
+  if(periodMode==='unpaid') return records.filter(r=>r.payment==='未収');
+  return records.filter(r=>{
+    if(!r.dateObj) return false;
+    const y=r.dateObj.getFullYear(), mo=r.dateObj.getMonth(), d=r.dateObj.getDate();
+    const cy=cursor.getFullYear(), cm=cursor.getMonth(), cd=cursor.getDate();
+    if(periodMode==='day') return y===cy&&mo===cm&&d===cd;
+    if(periodMode==='month') return y===cy&&mo===cm;
+    return y===cy;
+  });
+}
+
+function refresh() {
+  document.getElementById('main-content').style.display='block';
+  document.getElementById('period-label').textContent=getPeriodLabel();
+  const staffs=[...new Set(allRecords.map(r=>r.staff))];
+  document.getElementById('loaded-info').textContent='受信済み：'+allRecords.length+'件（'+staffs.join('・')+'）';
+  updateRegionLegend();
+  updateStats();
+  updateStaffSummary();
+  updateStaffTabs();
+  updateRegionFilter();
+  renderTable();
+  setTimeout(adjustStatFontSizes, 100);
+}
+
+function updateRegionLegend() {
+  const usedCodes=[...new Set(Object.values(regionMap))].sort();
+  document.getElementById('region-legend').innerHTML=usedCodes.map(c=>`<div class="region-chip">${c}</div>`).join('');
+}
+
+function getFiltered() {
+  const q=(document.getElementById('search-input')||{}).value||'';
+  // 検索中は全データ対象（年をまたいでも）
+  let recs = q.trim() ? [...allRecords] : filterByPeriod(allRecords);
+  if(activeStaff!=='all') recs=recs.filter(r=>r.staff===activeStaff);
+  const pay=document.getElementById('filter-payment').value;
+  const work=document.getElementById('filter-work').value;
+  const reg=document.getElementById('filter-region').value;
+  if(pay) recs=recs.filter(r=>r.payment===pay);
+  if(work) recs=recs.filter(r=>r.workType===work);
+  if(reg) recs=recs.filter(r=>r.regionCode===reg);
+  if(q.trim()) {
+    const kw=q.trim().toLowerCase();
+    recs=recs.filter(r=>[r.staff,r.customer,r.seikyusaki,r.kyakuban,r.regionCode,r.workType,r.payment,r.note,r.invoiceNo,r.dateRaw].some(v=>v&&String(v).toLowerCase().includes(kw)));
+  }
+  return recs;
+}
+
+function clearSearch() {
+  const el=document.getElementById('search-input');
+  if(el){el.value='';renderTable();}
+}
+
+function fitStatText(el) {
+  if(!el) return;
+  let size = 18;
+  el.style.fontSize = size + 'px';
+  const parent = el.parentElement;
+  if(!parent) return;
+  while(el.scrollWidth > parent.clientWidth - 16 && size > 8) {
+    size -= 1;
+    el.style.fontSize = size + 'px';
+  }
+}
+
+function updateStats(recs) {
+  if(!recs) recs=getFiltered();
+  document.getElementById('s-total').textContent=recs.length+'件';
+  document.getElementById('s-amount').textContent='¥'+recs.filter(r=>r.payment!=='未収').reduce((s,r)=>s+r.amount,0).toLocaleString();
+  document.getElementById('s-paid').textContent='¥'+recs.filter(r=>r.payment==='当日集金'||r.payment==='振込〒'||r.payment==='振込BK'||r.payment==='可').reduce((s,r)=>s+r.amount,0).toLocaleString();
+  document.getElementById('s-unpaid').textContent='¥'+recs.filter(r=>r.payment==='未収').reduce((s,r)=>s+r.amount,0).toLocaleString();
+  setTimeout(()=>{
+    ['s-total','s-amount','s-paid','s-unpaid'].forEach(id=>fitStatText(document.getElementById(id)));
+  }, 10);
+}
+
+function updateStaffSummary(recs) {
+  if(!recs) recs=getFiltered();
+  const staffs=[...new Set(allRecords.map(r=>r.staff))];
+  document.getElementById('staff-summary').innerHTML=staffs.map(s=>{
+    const sr=recs.filter(r=>r.staff===s);
+    const total=sr.filter(r=>r.payment!=='未収').reduce((a,r)=>a+r.amount,0);
+    const todayAmt=sr.filter(r=>r.payment==='当日集金'||r.payment==='集金のみ').reduce((a,r)=>a+r.amount,0);
+    const yearCount=sr.filter(r=>r.payment==='集金済み').length;
+    const uc=sr.filter(r=>r.payment==='未収').length;
+    return `<div class="staff-card">
+      <div class="staff-name">${s}</div>
+      <div class="staff-row"><span>訪問件数</span><span>${sr.length}件</span></div>
+      <div class="staff-row"><span>売上合計</span><span>¥${total.toLocaleString()}</span></div>
+      <div class="staff-row"><span>当日集金</span><span style="color:#0F6E56;">¥${todayAmt.toLocaleString()}</span></div>
+      <div class="staff-row"><span>1年分集金済</span><span style="color:#0F6E56;">${yearCount}件</span></div>
+      <div class="staff-row"><span>未収</span><span style="color:${uc>0?'#A32D2D':'#1a1a1a'};">${uc}件</span></div>
+    </div>`;
+  }).join('');
+}
+
+function updateStaffTabs() {
+  const staffs=[...new Set(allRecords.map(r=>r.staff))];
+  document.getElementById('staff-tabs').innerHTML=
+    `<button class="staff-tab${activeStaff==='all'?' active':''}" onclick="setStaff('all')">全員</button>`+
+    staffs.map(s=>`<button class="staff-tab${activeStaff===s?' active':''}" onclick="setStaff('${s}')">${s}</button>`).join('');
+}
+
+function updateRegionFilter() {
+  const sel=document.getElementById('filter-region');
+  const cur=sel.value;
+  const codes=[...new Set(Object.values(regionMap))].sort();
+  sel.innerHTML='<option value="">全地域</option>'+codes.map(c=>`<option value="${c}"${cur===c?' selected':''}>${c}</option>`).join('');
+}
+
+function setStaff(s){ activeStaff=s; updateStaffTabs(); renderTable(); }
+
+function toggleAbsentMgr(idx) {
+  allRecords[idx].absent = !allRecords[idx].absent;
+  if(allRecords[idx].firebaseId && window._updateDoc && window._doc && window._db) {
+    try {
+      window._updateDoc(window._doc(window._db, 'records', allRecords[idx].firebaseId), { absent: allRecords[idx].absent });
+    } catch(e){ console.log('Firebase更新エラー:', e); }
+  }
+  renderTable();
+}
+
+function editNextMonth(idx, value) {
+  allRecords[idx].nextMonthOverride = value;
+  allRecords[idx]._nextMonth = value;
+  // 同じ顧客の全レコードも統一
+  const customer = allRecords[idx].customer;
+  allRecords.forEach(r => {
+    if(r.customer === customer) {
+      r.nextMonthOverride = value;
+      r._nextMonth = value;
+    }
+  });
+  if(allRecords[idx].firebaseId&&window._updateDoc&&window._doc&&window._db) {
+    try{window._updateDoc(window._doc(window._db,'records',allRecords[idx].firebaseId),{nextMonthOverride:value});}catch(e){}
+  }
+  renderTable();
+}
+
+function editDate(idx, value) {
+  allRecords[idx].dateRaw = value; refresh();
+}
+function editStaff(idx, value) {
+  allRecords[idx].staff = value;
+  if(allRecords[idx].firebaseId&&window._updateDoc&&window._doc&&window._db) try{window._updateDoc(window._doc(window._db,'records',allRecords[idx].firebaseId),{staff:value});}catch(e){}
+}
+function editCustomer(idx, value) {
+  allRecords[idx].customer = value;
+  if(allRecords[idx].firebaseId&&window._updateDoc&&window._doc&&window._db) try{window._updateDoc(window._doc(window._db,'records',allRecords[idx].firebaseId),{customer:value});}catch(e){}
+}
+function editSeikyusaki(idx, value) {
+  allRecords[idx].seikyusaki = value;
+  if(allRecords[idx].firebaseId&&window._updateDoc&&window._doc&&window._db) try{window._updateDoc(window._doc(window._db,'records',allRecords[idx].firebaseId),{seikyusaki:value});}catch(e){}
+}
+function editRegion(idx, value) {
+  allRecords[idx].regionCode = value;
+  if(allRecords[idx].firebaseId&&window._updateDoc&&window._doc&&window._db) try{window._updateDoc(window._doc(window._db,'records',allRecords[idx].firebaseId),{region:value});}catch(e){}
+}
+function editKyakuban(idx, value) {
+  allRecords[idx].kyakuban = value;
+  if(allRecords[idx].firebaseId&&window._updateDoc&&window._doc&&window._db) try{window._updateDoc(window._doc(window._db,'records',allRecords[idx].firebaseId),{kyakuban:value});}catch(e){}
+}
+function editWorkType(idx, value) {
+  allRecords[idx].workType = value; allRecords[idx].workDetail = value;
+  // 集金のみに変更したら支払いをリセット
+  if(value==='集金のみ') allRecords[idx].payment = '有';
+  else if(allRecords[idx].payment==='有'||allRecords[idx].payment==='無') allRecords[idx].payment = '当日集金';
+  if(allRecords[idx].firebaseId&&window._updateDoc&&window._doc&&window._db) try{window._updateDoc(window._doc(window._db,'records',allRecords[idx].firebaseId),{workType:value,workDetail:value,payment:allRecords[idx].payment});}catch(e){}
+  updateStats(); updateStaffSummary(); renderTable();
+}
+function editPaymentMgr(idx, value) {
+  allRecords[idx].payment = value;
+  const w = allRecords[idx].workType||'';
+  if(value==='当日集金'||(w==='集金のみ'&&value==='可')) {
+    // 当日集金・集金のみ可 → 入金日を自動設定
+    if(!allRecords[idx].nyukinDate) {
+      const d = new Date();
+      allRecords[idx].nyukinDate = (d.getMonth()+1)+'/'+d.getDate();
+    }
+  } else if(value==='〒'||value==='BK') {
+    // 振込 → 変更した日を入金日に
+    const d = new Date();
+    allRecords[idx].nyukinDate = (d.getMonth()+1)+'/'+d.getDate();
+  } else if(value==='集金済み'||value==='未収'||(w==='集金のみ'&&value==='不可')) {
+    // 集金済み・未収・集金のみ不可 → 入金日を空欄に
+    allRecords[idx].nyukinDate = '';
+  }
+  if(allRecords[idx].firebaseId&&window._updateDoc&&window._doc&&window._db) try{window._updateDoc(window._doc(window._db,'records',allRecords[idx].firebaseId),{payment:value,nyukinDate:allRecords[idx].nyukinDate||''});}catch(e){}
+  updateStats(); updateStaffSummary(); renderTable();
+}
+function editAmount(idx, value) {
+  allRecords[idx].amount = parseInt(value)||0;
+  if(allRecords[idx].firebaseId&&window._updateDoc&&window._doc&&window._db) try{window._updateDoc(window._doc(window._db,'records',allRecords[idx].firebaseId),{amount:parseInt(value)||0});}catch(e){}
+  updateStats(); updateStaffSummary();
+}
+function editNyukinDate(idx, value) {
+  allRecords[idx].nyukinDate = value;
+  if(allRecords[idx].firebaseId && window._updateDoc && window._doc && window._db) {
+    try { window._updateDoc(window._doc(window._db,'records',allRecords[idx].firebaseId),{nyukinDate:value}); } catch(e){}
+  }
+}
+
+function editFurikomiSaki(idx, value) {
+  allRecords[idx].furikomiSaki = value;
+  if(allRecords[idx].firebaseId && window._updateDoc && window._doc && window._db) {
+    try { window._updateDoc(window._doc(window._db,'records',allRecords[idx].firebaseId),{furikomiSaki:value}); } catch(e){}
+  }
+}
+
+function editInvoiceType(idx, value) {
+  allRecords[idx].invoiceType = value;
+  if(allRecords[idx].firebaseId && window._updateDoc && window._doc && window._db) {
+    try { window._updateDoc(window._doc(window._db,'records',allRecords[idx].firebaseId),{invoiceType:value}); } catch(e){}
+  }
+}
+
+function editInvoiceNo(idx, value) {
+  allRecords[idx].invoiceNo = value;
+  if(allRecords[idx].firebaseId && window._updateDoc && window._doc && window._db) {
+    try { window._updateDoc(window._doc(window._db,'records',allRecords[idx].firebaseId),{invoiceNo:value}); } catch(e){}
+  }
+}
+
+function editInvoiceDate(idx, value) {
+  allRecords[idx].invoiceDate = value;
+  if(allRecords[idx].firebaseId && window._updateDoc && window._doc && window._db) {
+    try { window._updateDoc(window._doc(window._db,'records',allRecords[idx].firebaseId),{invoiceDate:value}); } catch(e){}
+  }
+}
+
+function editNote(idx, value) {
+  allRecords[idx].note = value;
+  if(allRecords[idx].firebaseId && window._updateDoc && window._doc && window._db) {
+    try {
+      window._updateDoc(window._doc(window._db, 'records', allRecords[idx].firebaseId), { note: value });
+    } catch(e){ console.log('Firebase更新エラー:', e); }
+  }
+}
+
+function editPayment(idx) {
+  const r=allRecords[idx];
+  const choice=prompt('【'+r.customer+'】の支払い状況を変更\n\n1: 集金\n2: 振込\n3: 未収のまま\n\n番号を入力してください：');
+  if(!choice) return;
+  const num=parseInt(choice);
+  if(num===3) return;
+  if(num!==1&&num!==2){alert('1〜3の番号を入力してください');return;}
+  const method=num===1?'集金':'振込';
+  const today=new Date();
+  const defaultDate=today.getFullYear()+'/'+(today.getMonth()+1).toString().padStart(2,'0')+'/'+today.getDate().toString().padStart(2,'0');
+  const dateInput=prompt('集金日・振込日を入力してください\n（例：2026/04/25）',defaultDate);
+  if(!dateInput) return;
+  allRecords[idx].payment='当日集金';
+  allRecords[idx].note=(r.note?r.note+' ／ ':'')+dateInput+' '+method+'済';
+  if(allRecords[idx].firebaseId&&window._updateDoc&&window._doc&&window._db){
+    try {
+      window._updateDoc(window._doc(window._db,'records',allRecords[idx].firebaseId),{
+        payment:'today',
+        note:allRecords[idx].note
+      });
+    } catch(e){console.log('Firebase更新エラー:',e);}
+  }
+  refresh();
+}
+
+function adjustStatFontSizes() {
+  document.querySelectorAll('.stat-value').forEach(el => {
+    el.style.fontSize = '';
+    const container = el.parentElement;
+    const maxWidth = container ? container.clientWidth - 20 : 200;
+    let size = 26;
+    el.style.fontSize = size + 'px';
+    while(el.scrollWidth > maxWidth && size > 12) {
+      size -= 1;
+      el.style.fontSize = size + 'px';
+    }
+  });
+}
+
+function amountStyle(amount) {
+  if(!amount) return 'font-size:12px;';
+  const len = ('¥'+Number(amount).toLocaleString()).length;
+  if(len <= 6) return 'font-size:12px;font-weight:600;';
+  if(len <= 8) return 'font-size:11px;font-weight:600;';
+  if(len <= 10) return 'font-size:10px;font-weight:600;';
+  return 'font-size:9px;font-weight:600;';
+}
+
+function formatDate(dateRaw) {
+  if(!dateRaw) return '';
+  const fmt = (document.getElementById('date-format')||{}).value || 'seireki';
+  const m = dateRaw.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+  if(!m) return dateRaw;
+  const y=parseInt(m[1]), mo=m[2], d=m[3];
+  if(fmt==='gengou') {
+    let era='', base=0;
+    if(y>=2019){era='令和';base=2018;}
+    else if(y>=1989){era='平成';base=1988;}
+    else if(y>=1926){era='昭和';base=1925;}
+    else{era='大正';base=1911;}
+    return era+(y-base)+'年'+mo+'月'+d+'日';
+  }
+  return y+'年'+mo+'月'+d+'日';
+}
+
+function applyTableFont() {
+  const slider = document.getElementById('font-size-slider');
+  const label = document.getElementById('font-size-label');
+  const weightSlider = document.getElementById('font-weight-slider');
+  const weightLabel = document.getElementById('font-weight-label');
+  if(!slider||!weightSlider) return;
+  // 画面幅に応じてデフォルト値を設定（ユーザーが変えていない場合）
+  const isLarge = window.innerWidth >= 1200;
+  const defaultSize = isLarge ? 15 : 12;
+  if(!slider.dataset.userSet) {
+    slider.value = defaultSize;
+    label.textContent = defaultSize;
+  } else {
+    label.textContent = slider.value;
+  }
+  weightLabel.textContent = weightSlider.value;
+  document.getElementById('table-font-style').textContent =
+    `table td, table td input, table td select, table td textarea { font-size: ${slider.value}px !important; font-weight: ${weightSlider.value} !important; }`;
+}
+function highlight(text, kw) {
+  if(!kw||!text) return text||'';
+  const escaped = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return String(text).replace(new RegExp('('+escaped+')', 'gi'), '<mark style="background:#FFF176;border-radius:2px;">$1</mark>');
+}
+
+function renderTable() {
+  const mc = document.getElementById('main-content');
+  if(mc && mc.dataset.hidden==='1') return;
+  const q = (document.getElementById('search-input')||{}).value||'';
+  const sortEl = document.getElementById('sort-order');
+  const sortOrder = sortEl ? sortEl.value : 'desc';
+
+  // 顧客名統一（getFilteredの前に適用）
+  const latestInfo = {};
+  [...allRecords].sort((a,b)=>(a.dateObj||0)-(b.dateObj||0)).forEach(r=>{
+    if(r.customer) {
+      const nextMonthAuto = (()=>{
+        if(r.nextMonthOverride) return r.nextMonthOverride;
+        if(!r.nenkan||!r.dateObj) return '';
+        const interval = Math.round(12/r.nenkan);
+        const next = new Date(r.dateObj);
+        next.setMonth(next.getMonth()+interval);
+        return (next.getMonth()+1)+'月';
+      })();
+      latestInfo[r.customer]={
+        regionCode:r.regionCode||'',
+        kyakuban:r.kyakuban||'',
+        seikyusaki:r.seikyusaki||'',
+        nextMonth:nextMonthAuto
+      };
+    }
+  });
+  allRecords.forEach(r=>{
+    if(r.customer&&latestInfo[r.customer]){
+      r.regionCode=latestInfo[r.customer].regionCode;
+      r.kyakuban=latestInfo[r.customer].kyakuban;
+      r.seikyusaki=latestInfo[r.customer].seikyusaki;
+      if(!r.nextMonthOverride) r._nextMonth=latestInfo[r.customer].nextMonth;
+      else r._nextMonth=r.nextMonthOverride;
+    }
+  });
+
+  // フィルタリング（コピーして使う）
+  let rows = [...getFiltered()];
+
+  // ソート
+  rows.sort((a,b)=>{
+    if(!a.dateObj||!b.dateObj) return 0;
+    return sortOrder==='asc' ? a.dateObj-b.dateObj : b.dateObj-a.dateObj;
+  });
+
+  const tbody=document.getElementById('table-body');
+  if(rows.length===0){
+    tbody.innerHTML='<tr><td colspan="16" class="empty-state">該当する記録がありません</td></tr>';
+    document.getElementById('row-count').textContent=''; return;
+  }
+  let html='', lastKey='';
+  rows.forEach(r=>{
+    let key='';
+    if(periodMode==='month'||periodMode==='all'||periodMode==='unpaid'||q.trim()) key=r.dateRaw;
+    else if(periodMode==='year'&&r.dateObj) key=r.dateObj.getFullYear()+'年'+(r.dateObj.getMonth()+1)+'月';
+    if(key&&key!==lastKey){
+      const keyDisplay = formatDate(key)||key;
+      html+=`<tr><td colspan="16" class="group-header">${keyDisplay}</td></tr>`;lastKey=key;
+    }
+    const idx=allRecords.indexOf(r);
+    const dateDisplay = formatDate(r.dateRaw);
+    const inp = (val, fn, ph='') => `<input type="text" value="${val||''}" onchange="${fn}(${idx}, this.value)" style="" placeholder="${ph}" />`;
+    const nextMonth = r._nextMonth || (()=>{
+      if(!r.nenkan||!r.dateObj) return '';
+      const interval = Math.round(12/r.nenkan);
+      const next = new Date(r.dateObj);
+      next.setMonth(next.getMonth()+interval);
+      return (next.getMonth()+1)+'月';
+    })();
+    html+=`<tr>
+      <td style="font-size:12px;">${inp(dateDisplay,'editDate')}</td>
+      <td style="font-size:12px;">${inp(r.staff,'editStaff')}</td>
+      <td style="font-size:12px;">${inp(r.customer,'editCustomer')}</td>
+      <td style="font-size:12px;">${inp(r.seikyusaki,'editSeikyusaki')}</td>
+      <td style="font-size:12px;">
+        <select onchange="editRegion(${idx}, this.value)" style="">
+          <option value="">-</option>
+          ${['A','B','C','D','E','F','G','H','I','J','K','L'].map(c=>`<option value="${c}" ${r.regionCode===c?'selected':''}>${c}</option>`).join('')}
+        </select>
+      </td>
+      <td style="font-size:12px;"><input type="text" value="${r.kyakuban||''}" onchange="editKyakuban(${idx}, this.value)" style="" placeholder="新規" list="kyakuban-opts" /></td>
+      <td style="font-size:12px;"><input type="text" value="${r._nextMonth||nextMonth||''}" onchange="editNextMonth(${idx}, this.value)" style="color:#1D9E75;font-weight:500;" placeholder="-" /></td>
+      <td style="font-size:12px;">
+        <select onchange="editWorkType(${idx}, this.value)" style="">
+          <option value="">-</option>
+          ${['点検','清掃','その他','集金のみ'].map(w=>`<option value="${w}" ${(r.workType||'').includes(w)?'selected':''}>${w}</option>`).join('')}
+        </select>
+      </td>
+      <td style="font-size:12px;">
+        ${r.workType==='集金のみ'?`<select onchange="editPaymentMgr(${idx}, this.value)" style="color:${r.payment==='不可'?'#E24B4A':r.payment==='可'?'#0F6E56':'#1a1a1a'};">
+          <option value="可" ${r.payment==='可'?'selected':''}>可</option>
+          <option value="不可" ${r.payment==='不可'?'selected':''}>不可</option>
+        </select>`:`<div style="display:flex;flex-direction:column;gap:2px;">
+          <select onchange="editPaymentMgr(${idx}, this.value)" style="color:${r.payment==='当日集金'?'#0F6E56':r.payment==='未収'?'#E24B4A':r.payment==='〒'||r.payment==='BK'?'#E24B4A':'#1a1a1a'};font-weight:${r.payment==='〒'||r.payment==='BK'?'700':'400'};">
+            <option value="当日集金" style="color:#0F6E56;font-weight:400;" ${r.payment==='当日集金'?'selected':''}>当日集金</option>
+            <option value="集金済み" style="color:#1a1a1a;font-weight:400;" ${r.payment==='集金済み'?'selected':''}>集金済み</option>
+            <option value="未収" style="color:#E24B4A;font-weight:400;" ${r.payment==='未収'?'selected':''}>未収</option>
+            <option value="〒" style="color:#E24B4A;font-weight:700;" ${r.payment==='〒'?'selected':''}>〒</option>
+            <option value="BK" style="color:#E24B4A;font-weight:700;" ${r.payment==='BK'?'selected':''}>BK</option>
+          </select>
+        </div>`}
+      </td>
+      <td><input type="text" value="${r.amount?'¥'+Number(r.amount).toLocaleString():''}" onchange="editAmount(${idx}, this.value)" onfocus="this.value=r.amount||''" onblur="this.value=allRecords[${idx}].amount?'¥'+Number(allRecords[${idx}].amount).toLocaleString():''" style="${amountStyle(r.amount)}" placeholder="¥0" /></td>
+      <td style="font-size:12px;">${inp(r.nyukinDate,'editNyukinDate')}</td>
+
+      <td style="font-size:12px;min-width:200px;"><textarea onchange="editNote(${idx}, this.value)" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';" style="overflow:hidden;" placeholder="備考を入力">${r.note||''}</textarea></td>
+      <td style="text-align:center;vertical-align:middle;" onclick="toggleAbsentMgr(${idx})">
+        <div style="width:24px;height:24px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;${r.absent?'border:2px solid #E24B4A;background:#FCEBEB;':'border:2px solid #ddd;background:#fff;'}">
+          ${r.absent?'&#10003;':''}
+        </div>
+      </td>
+      <td style="font-size:12px;">
+        <select onchange="editInvoiceType(${idx}, this.value)" style="">
+          <option value="" ${!r.invoiceType?'selected':''}>-</option>
+          <option value="請求書・写真報告" ${r.invoiceType==='請求書・写真報告'?'selected':''}>請求書・写真報告</option>
+          <option value="見積書" ${r.invoiceType==='見積書'?'selected':''}>見積書</option>
+        </select>
+      </td>
+      <td style="font-size:12px;">${inp(r.invoiceNo,'editInvoiceNo','No')}</td>
+      <td style="font-size:12px;">${inp(r.invoiceDate,'editInvoiceDate')}</td>
+    </tr>`;
+  });
+  tbody.innerHTML=html;
+  document.getElementById('row-count').textContent=rows.length+'件を表示中';
+  updateStats(rows);
+  updateStaffSummary(rows);
+  setTimeout(adjustStatFontSizes, 50);
+  setTimeout(applyColAligns, 10);
+}
+function showMonthExport() {
+  if(allRecords.length===0){alert('データがありません');return;}
+  const months=[...new Set(allRecords.filter(r=>r.dateObj).map(r=>r.dateObj.getFullYear()+'年'+(r.dateObj.getMonth()+1)+'月'))].sort();
+  const sel=document.getElementById('month-select');
+  sel.innerHTML=months.map(m=>`<option value="${m}">${m}</option>`).join('');
+  document.getElementById('month-modal').style.display='flex';
+}
+
+function exportMonthCSV() {
+  const month=document.getElementById('month-select').value;
+  const [y,m]=month.replace('年','/').replace('月','').split('/').map(Number);
+  const rows=allRecords.filter(r=>r.dateObj&&r.dateObj.getFullYear()===y&&r.dateObj.getMonth()+1===m)
+    .sort((a,b)=>a.dateObj-b.dateObj||a.time.localeCompare(b.time));
+  if(rows.length===0){alert('該当データがありません');return;}
+  const header='担当者,日付,時間,地域,顧客名,作業内容,支払い,金額,備考';
+  const csv='\uFEFF'+[header,...rows.map(r=>[r.staff,r.dateRaw,r.time,r.regionCode,r.customer,r.workType||'',r.payment,r.amount,r.note].join(','))].join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download='日報_'+month+'.csv'; a.click(); URL.revokeObjectURL(url);
+  document.getElementById('month-modal').style.display='none';
+}
+
+
+function showYearExport() {
+  if(allRecords.length===0){alert('データがありません');return;}
+  const years=[...new Set(allRecords.filter(r=>r.dateObj).map(r=>r.dateObj.getFullYear()+'年'))].sort();
+  const sel=document.getElementById('month-select');
+  sel.innerHTML=years.map(y=>`<option value="${y}">${y}</option>`).join('');
+  document.getElementById('month-modal').style.display='flex';
+}
+
+function exportYearCSV() {
+  const yearStr=document.getElementById('month-select').value;
+  const y=parseInt(yearStr);
+  const rows=[...allRecords].filter(r=>r.dateObj&&r.dateObj.getFullYear()===y)
+    .sort((a,b)=>a.dateObj-b.dateObj);
+  if(rows.length===0){alert('該当データがありません');return;}
+  const header='担当者,日付,顧客名,請求先,地域,客番,次月,作業内容,集金の有無,金額,入金日,振込先,備考,不在,請求・見積,請求・見積No,投函日';
+  const csv='\uFEFF'+[header,...rows.map(r=>[r.staff,r.dateRaw,r.customer,r.seikyusaki||'',r.regionCode,r.kyakuban||'',r._nextMonth||'',r.workDetail||r.workType||'',r.payment,r.amount,r.nyukinDate||'',r.furikomiSaki||'',r.note||'',r.absent?'不在':'',r.invoiceType||'',r.invoiceNo||'',r.invoiceDate||''].join(','))].join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download='日報_'+yearStr+'.csv'; a.click(); URL.revokeObjectURL(url);
+  document.getElementById('month-modal').style.display='none';
+}
+
+function exportCSV() {
+  const rows=getFiltered();
+  if(rows.length===0){alert('データがありません');return;}
+  const header='担当者,日付,時間,地域,顧客名,作業内容,支払い,金額,備考';
+  const csv='\uFEFF'+[header,...rows.map(r=>[r.staff,r.dateRaw,r.time,r.regionCode,r.customer,r.workType||'',r.payment,r.amount,r.note].join(','))].join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download='日報まとめ_'+getPeriodLabel()+'.csv'; a.click(); URL.revokeObjectURL(url);
+}
+// 列リサイズ機能
+// 列揃え・設定保存
+let selectedColIndex = -1;
+let colAligns = {};
+
+function setColAlign(align) {
+  if(selectedColIndex < 0) return;
+  colAligns[selectedColIndex] = align;
+  document.querySelectorAll(`#table-body tr td:nth-child(${selectedColIndex+1})`).forEach(td=>{
+    td.style.textAlign = align;
+    const inp = td.querySelector('input,select,textarea');
+    if(inp) inp.style.textAlign = align;
+  });
+  document.querySelectorAll(`#col-header-row th:nth-child(${selectedColIndex+1})`).forEach(th=>{
+    th.style.textAlign = align;
+  });
+  closeAlignBar();
+}
+
+function closeAlignBar() {
+  document.getElementById('col-align-bar').style.display = 'none';
+  document.querySelectorAll('th.resizable').forEach(th=>th.classList.remove('col-selected'));
+  selectedColIndex = -1;
+}
+
+function applyColAligns() {
+  Object.keys(colAligns).forEach(idx=>{
+    const align = colAligns[idx];
+    const i = parseInt(idx)+1;
+    document.querySelectorAll(`#table-body tr td:nth-child(${i})`).forEach(td=>{
+      td.style.textAlign = align;
+      const inp = td.querySelector('input,select,textarea');
+      if(inp) inp.style.textAlign = align;
+    });
+    document.querySelectorAll(`#col-header-row th:nth-child(${i})`).forEach(th=>{
+      th.style.textAlign = align;
+    });
+  });
+}
+
+
+function saveSettings() {
+  const ths = document.querySelectorAll('th.resizable');
+  const colWidths = [...ths].map(th=>th.style.width||th.offsetWidth+'px');
+  const settings = {
+    fontSize: document.getElementById('font-size-slider').value,
+    fontWeight: document.getElementById('font-weight-slider').value,
+    colWidths,
+    colAligns
+  };
+  localStorage.setItem('nippo-settings', JSON.stringify(settings));
+  const btn = event.target;
+  btn.textContent = '✓ 保存しました';
+  setTimeout(()=>btn.textContent='⚙ 設定を保存', 1500);
+}
+
+function loadSettings() {
+  try {
+    const s = JSON.parse(localStorage.getItem('nippo-settings'));
+    if(!s) return;
+    if(s.fontSize) {
+      document.getElementById('font-size-slider').value = s.fontSize;
+      document.getElementById('font-size-slider').dataset.userSet = '1';
+      document.getElementById('font-size-label').textContent = s.fontSize;
+    }
+    if(s.fontWeight) {
+      document.getElementById('font-weight-slider').value = s.fontWeight;
+      document.getElementById('font-weight-label').textContent = s.fontWeight;
+    }
+    if(s.colAligns) colAligns = s.colAligns;
+    if(s.colWidths) {
+      const ths = document.querySelectorAll('th.resizable');
+      s.colWidths.forEach((w,i)=>{ if(ths[i]) { ths[i].style.width=w; ths[i].style.minWidth=w; }});
+    }
+  } catch(e) {}
+  applyTableFont(); setTimeout(loadSettings, 600);
+}
+
+function initResizableColumns() {
+  const ths = document.querySelectorAll('th.resizable');
+  ths.forEach(th => {
+    const handle = document.createElement('div');
+    handle.className = 'resize-handle';
+    th.appendChild(handle);
+    let startX, startW;
+    th.addEventListener('click', e => {
+      if(e.target === handle) return;
+      const ths = [...document.querySelectorAll('th.resizable')];
+      selectedColIndex = ths.indexOf(th);
+      document.querySelectorAll('th.resizable').forEach(t=>t.classList.remove('col-selected'));
+      th.classList.add('col-selected');
+      const bar = document.getElementById('col-align-bar');
+      bar.style.display = 'flex';
+      bar.style.left = e.pageX+'px';
+      bar.style.top = (e.pageY+10)+'px';
+    });
+    handle.addEventListener('mousedown', e => {
+      startX = e.pageX;
+      startW = th.offsetWidth;
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+      e.preventDefault();
+      e.stopPropagation();
+    });
+    function onMove(e) {
+      const w = Math.max(30, startW + e.pageX - startX);
+      th.style.width = w + 'px';
+      th.style.minWidth = w + 'px';
+    }
+    function onUp() {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    }
+  });
+}
+setTimeout(initResizableColumns, 500);
+
+document.addEventListener('click', e=>{ const bar=document.getElementById('col-align-bar'); if(bar&&!bar.contains(e.target)&&!e.target.closest('th.resizable')) closeAlignBar(); });
+window.addEventListener('resize', ()=>{ ['s-total','s-amount','s-paid','s-unpaid'].forEach(id=>fitStatText(document.getElementById(id))); const sl=document.getElementById('font-size-slider'); if(sl) delete sl.dataset.userSet; applyTableFont(); });
+</script>
+
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, collection, onSnapshot, doc, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyB8avLcxp5J_ZSo_G_ibD7d6mXYKHVXXbo",
+    authDomain: "nippo-6f934.firebaseapp.com",
+    projectId: "nippo-6f934",
+    storageBucket: "nippo-6f934.firebasestorage.app",
+    messagingSenderId: "855759204569",
+    appId: "1:855759204569:web:3f4406a3e22f0c3a850ec8"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  window._db = db;
+  window._doc = doc;
+  window._updateDoc = updateDoc;
+
+  function convertPayment(p) {
+    if(p==='paid') return '集金済み';
+    if(p==='today') return '当日集金';
+    if(p==='collect') return '集金のみ';
+    if(p==='unpaid') return '未収';
+    return p || '';
+  }
+
+  // ページ読み込み時刻を記録（これ以降に届いたデータのみ表示）
+  const pageLoadTime = new Date();
+
+  const q = query(collection(db, 'records'), orderBy('createdAt', 'asc'));
+  onSnapshot(q, (snapshot) => {
+    let changed = false;
+    snapshot.docChanges().forEach((change) => {
+      if(change.type === 'added') {
+        const data = change.doc.data();
+        if(allRecords.find(r=>r.firebaseId===change.doc.id)) return;
+        // ページ読み込み前のデータは表示しない
+        const createdAt = data.createdAt ? data.createdAt.toDate() : null;
+        if(createdAt && createdAt < pageLoadTime) return;
+        const dateRaw = data.date || '';
+        const parsed = parseJpDate(dateRaw);
+        const regionCode = assignRegion(data.region || '');
+        allRecords.push({
+          staff: data.staff || '不明',
+          dateRaw,
+          dateObj: parsed,
+          no: '',
+          time: data.time || '',
+          regionRaw: data.region || '',
+          regionCode,
+          customer: data.customer || '',
+          workType: data.workType || '',
+          amount: data.amount || 0,
+          payment: convertPayment(data.payment),
+          note: data.note || '',
+          absent: data.absent || false,
+          firebaseId: change.doc.id
+        });
+        changed = true;
+      }
+      if(change.type === 'modified') {
+        const data = change.doc.data();
+        const idx = allRecords.findIndex(r=>r.firebaseId===change.doc.id);
+        if(idx !== -1) {
+          allRecords[idx].payment = convertPayment(data.payment);
+          allRecords[idx].note = data.note || '';
+          allRecords[idx].amount = data.amount || 0;
+          changed = true;
+        }
+      }
+    });
+    if(changed) {
+      const mc = document.getElementById('main-content');
+      if(mc && mc.dataset.hidden==='1') return;
+      const staffs = [...new Set(allRecords.map(r=>r.staff))];
+      mc.style.display='block';
+      document.getElementById('loaded-info').textContent = 'リアルタイム受信中：'+allRecords.length+'件（'+staffs.join('・')+'）';
+      updateRegionLegend();
+      updateStats();
+      updateStaffSummary();
+      updateStaffTabs();
+      updateRegionFilter();
+      renderTable();
+    }
+  });
+</script>
+<datalist id="kyakuban-opts"><option value="新規"></datalist>
+</body>
+</html>
